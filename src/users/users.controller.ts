@@ -1,34 +1,27 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { UsersService } from './users.service.js';
-import { CreateUserDto } from './dto/create-user.dto.js';
-import { UpdateUserDto } from './dto/update-user.dto.js';
+import { Body, Controller, Get, NotFoundException, Patch, UseGuards } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { AuthUser, CurrentUser } from '../auth/decorators/current-user.decorator.js';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { UpdateProfileDto } from './dto/update-profile.dto.js';
+import { User } from './schemas/user.schema.js';
 
-@Controller('users')
+@Controller('me')
+@UseGuards(JwtAuthGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
-
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
-  }
+  constructor(@InjectModel(User.name) private readonly users: Model<User>) {}
 
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  async me(@CurrentUser() u: AuthUser) {
+    const user = await this.users.findById(u.id);
+    if (!user) throw new NotFoundException();
+    return user;
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  @Patch()
+  async update(@CurrentUser() u: AuthUser, @Body() dto: UpdateProfileDto) {
+    const user = await this.users.findByIdAndUpdate(u.id, { $set: dto }, { new: true, runValidators: true });
+    if (!user) throw new NotFoundException();
+    return user;
   }
 }

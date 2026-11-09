@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
 import { createObserveModule } from '@nestjs/observe';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
@@ -19,7 +21,6 @@ import { AdminModule } from './admin/admin.module.js';
 import { VerificationModule } from './verification/verification.module.js';
 import { AuditLogsModule } from './audit-logs/audit-logs.module.js';
 import { CommonModule } from './common/common.module.js';
-import { ConfigModule } from './config/config.module.js';
 import { DatabaseModule } from './database/database.module.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
@@ -34,6 +35,18 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       appSecret: process.env.OBSERVE_APP_SECRET ?? 'YOUR_APP_SECRET',
       serviceId: 'tourism-backend',
     }),
+
+    // reads .env and makes ConfigService available everywhere
+    ConfigModule.forRoot({
+        isGlobal: true,
+        envFilePath: 'config/dev.env',
+      }),
+    // MongoDB connection (MONGODB_URI from .env)
+    MongooseModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (c: ConfigService) => ({ uri: c.getOrThrow<string>('MONGODB_URI') }),
+    }),
+
     UsersModule,
     AuthModule,
     PlacesModule,
