@@ -4,7 +4,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { VerificationStatus } from '../enums.ts';
+import { VerificationStatus } from '../enums.js';
 
 export abstract class AppBaseEntity {
   @PrimaryGeneratedColumn('uuid')

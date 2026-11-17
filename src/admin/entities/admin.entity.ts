@@ -1,5 +1,5 @@
 import { Column, Entity } from 'typeorm';
-import { AppBaseEntity } from '../../common/entities/common.entity.ts';
+import { AppBaseEntity } from '../../common/entities/common.entity.js';
 
 @Entity('admins')
 export class Admin extends AppBaseEntity {
